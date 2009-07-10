@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                WWW-YQL
-version:             0.01
+version:             0.02
 abstract:            Simple interface for Yahoo Query Language
 license:             ~
 author:              

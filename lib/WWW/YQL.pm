@@ -10,12 +10,12 @@ use JSON::Any;
 
 BEGIN {
     use vars qw($VERSION);
-    $VERSION     = '0.01';
+    $VERSION     = '0.02';
 }
 
 =head1 NAME
 
-  WWW::YQL - Simple interface for Yahoo Query Language
+WWW::YQL - Simple interface for Yahoo Query Language
 
 =head1 SYNOPSIS
 
@@ -32,18 +32,20 @@ BEGIN {
 
 =head1 DESCRIPTION
 
-  This is a simple wrapper to the Yahoo Query Language service. Instead of manually sending a GET request to Yahoo and getting XML or JSON you can now use a simple function call and get a deep Perl data structure.
+This is a simple wrapper to the Yahoo Query Language service. Instead of 
+manually sending a GET request to Yahoo and getting XML or JSON you can 
+now use a simple function call and get a deep Perl data structure.
 
 =head1 USAGE
 
-  $yql->query("show tables");
+  my $data = $yql->query("select * from table");
 
 =head1 FUNCTIONS
 
 =head2 new
 
-  New instance of WWW::YQL. Accepts one argument, 'env', to load more data tables,
-  e.g. WWW::YQL->new(env => 'http://datatables.org/alltables.env');
+New instance of WWW::YQL. Accepts one argument, 'env', to load more data tables,
+e.g. WWW::YQL->new(env => 'http://datatables.org/alltables.env');
 
 =cut
 
@@ -65,7 +67,7 @@ sub new {
 
 =head2 query
 
-  Run an YQL query. Accepts one argument, the query as a string.
+Run an YQL query. Accepts one argument, the query as a string.
 
 =cut
 
@@ -84,8 +86,9 @@ sub query {
 
 =head2 useragent
 
-  Returns the LWP::UserAgent object used to contact yahoo. You can tweak that object as required,
-  e.g. $yql->useragent->env_proxy in order to use the proxy set in environment.
+Returns the LWP::UserAgent object used to contact yahoo. You can tweak that 
+object as required, e.g. $yql->useragent->env_proxy in order to use the proxy 
+set in environment.
 
 =cut
 
@@ -121,30 +124,30 @@ sub _base_url {
 
 =head1 BUGS
 
-  As any software, it has bugs, but I'm hunting them down.
+As any software, it has bugs, but I'm hunting them down.
 
 =head1 SUPPORT
 
-  Check the source code or contact author for support.
+Check the source code or contact author for support.
 
 =head1 AUTHOR
 
-  Viorel Stirbu
-  CPAN ID: VIORELS
-  http://stirbu.name
+Viorel Stirbu
+CPAN ID: VIORELS
+http://stirbu.name
 
 =head1 COPYRIGHT
 
-  This program is free software; you can redistribute
-  it and/or modify it under the same terms as Perl itself.
+This program is free software; you can redistribute
+it and/or modify it under the same terms as Perl itself.
 
-  The full text of the license can be found in the
-  LICENSE file included with this module.
+The full text of the license can be found in the
+LICENSE file included with this module.
 
 =head1 SEE ALSO
 
-  http://developer.yahoo.com/yql
-  http://developer.yahoo.com/yql/console
+http://developer.yahoo.com/yql
+http://developer.yahoo.com/yql/console
 
 =cut
 

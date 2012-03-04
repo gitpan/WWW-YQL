@@ -1,156 +1,144 @@
-package WWW::YQL;
-
 use strict;
+package WWW::YQL;
+{
+  $WWW::YQL::VERSION = '0.001';
+}
 use warnings;
-
+use Moose;
 use URI;
 use URI::QueryParam;
 use LWP::UserAgent;
 use JSON::Any;
 
-BEGIN {
-    use vars qw($VERSION);
-    $VERSION     = '0.02';
+
+# ABSTRACT: Module for YQL queries
+# PODNAME: WWW::YQL
+
+has 'ua' => (
+    is  => 'rw',
+    isa => 'Object',
+    predicate => 'has_ua',
+    );
+
+has 'json_parser' => (
+    is  => 'rw',
+    isa => 'Object',
+    predicate => 'has_json_parser',
+    );
+
+
+sub BUILD{
+    my $self=shift;
+    $self->ua(new LWP::UserAgent());
+    $self->json_parser(new JSON::Any)
 }
+
+
+sub query{
+    my $self=shift;
+    my $query=shift;
+    die "No query string specified for WWW::YQL->query()" unless defined $query;
+
+    my $URI=URI->new('http://query.yahooapis.com/v1/public/yql');
+    my $res;
+    my $req;
+    if ($query =~ m/^insert/){
+	$res = $self->{'ua'}->post($URI, {
+	    'q'      => $query,
+	    'format' => 'json',
+				   });
+    }else{
+	$URI->query_form( 'q' => $query );
+	$URI->query_param( 'format'   => 'json' );
+	$req = HTTP::Request->new(GET => $URI);
+	$res = $self->{'ua'}->request($req);
+    }
+    if ($res->is_success) {
+        return $self->json_parser->decode($res->content);
+    }
+    else {
+        warn "$URI status ".$res->status_line;
+        return "Bad request: $query";
+    }
+
+}
+
+1;
+
+
+__END__
+=pod
 
 =head1 NAME
 
-WWW::YQL - Simple interface for Yahoo Query Language
+WWW::YQL - Module for YQL queries
+
+=head1 VERSION
+
+version 0.001
 
 =head1 SYNOPSIS
 
-  use WWW::YQL;
-  
-  my $yql = WWW::YQL->new;
+    use WWW::YQL;
+    
+    my $yql = WWW::YQL->new();
+    my $data = $yql->query("show tables");
 
-  my $data = $yql->query("select * from search.web where query = 'YQL'");
-  for my $result ( @{ $data->{'query'}{'results'}{'result'} } ) {
-      print $result->{'title'}, "\n";
-      print $result->{'abstract'}, "\n";
-      print '* ', $result->{'url'}, "\n\n";
-  }
+    foreach my $table ( @{ $data->{'query'}{'results'}{'table'} }){
+        print "$table\n";
+    }
 
-=head1 DESCRIPTION
+    $data = $yql->query("insert into yahoo.y.ahoo.it (url) values ('http://search.cpan.org/~cwimmer/')");
+    
+    my $shorty=$data->{'query'}->{'results'}->{'url'};
 
-This is a simple wrapper to the Yahoo Query Language service. Instead of 
-manually sending a GET request to Yahoo and getting XML or JSON you can 
-now use a simple function call and get a deep Perl data structure.
+    The User Agent that will be used to make the connection is available
+    from the ua() method.  You may make changes to the User Agent
+    before running the query() method.
 
-=head1 USAGE
+=head2 DESCRIPTION
 
-  my $data = $yql->query("select * from table");
+    This module is used to submit YQL queries and receive their responses.
 
-=head1 FUNCTIONS
-
-=head2 new
-
-New instance of WWW::YQL. Accepts one argument, 'env', to load more data tables,
-e.g. WWW::YQL->new(env => 'http://datatables.org/alltables.env');
-
-=cut
-
-sub new {
-    my ($class, %params) = @_;
-
-    my $self = bless ({}, ref ($class) || $class);
-
-    $self->{'_base_url'} = URI->new('http://query.yahooapis.com/v1/public/yql');
-    $self->{'_env'} = $params{'env'}; # || 'http://datatables.org/alltables.env';
-    # $self->{'_other_query_args'} = ...
-
-    # Instantiate helper objects
-    $self->{'_ua'} = LWP::UserAgent->new;
-    $self->{'_json'} = JSON->new;
-
-    return $self;
-}
+=head1 METHODS
 
 =head2 query
 
-Run an YQL query. Accepts one argument, the query as a string.
+    This method takes one argument, a string.  The string is the YQL
+    query string for this request.
 
-=cut
+    The return value is a has reference representing the result from
+    the YQL service.
 
-sub query {
-    my ($self, $query) = @_;
-    die "You must specify a yql statement to execute" unless defined $query;
+=head1 KNOWN BUGS
 
-    my $url = $self->_base_url;
-    $url->query_form( q => $query );
+None known at this time.  Please log issues at: 
 
-    my $response = $self->_request($url);
-    my $decoded = $self->{'_json'}->decode($response);
+https://github.com/cwimmer/WWW-YQL/issues
 
-    return $decoded;
-}
+=head1 AVAILABILITY
 
-=head2 useragent
+Source code is available on GitHub:
 
-Returns the LWP::UserAgent object used to contact yahoo. You can tweak that 
-object as required, e.g. $yql->useragent->env_proxy in order to use the proxy 
-set in environment.
+https://github.com/cwimmer/WWW-YQL
 
-=cut
+Module available on CPAN as WWW::YQL:
 
-sub useragent {
-    my ($self) = @_;
-    return $self->{'_ua'};
-}
+http://search.cpan.org/~cwimmer/
 
-sub _request {
-    my ($self, $url) = @_;
-
-    $url->query_param( format   => 'json' );
-    $url->query_param( env      => $self->{'_env'} ) if $self->{'_env'};
-
-    # XXX POST for insert/update/delete ?
-    my $req = HTTP::Request->new(GET => $url);
-    my $res = $self->{'_ua'}->request($req);
-
-    # Check the outcome of the response
-    if ($res->is_success) {
-        return $res->content;
-    }
-    else {
-        warn "$url status ".$res->status_line;
-        return undef;
-    }
-}
-
-sub _base_url {
-    my ($self) = @_;
-    return $self->{'_base_url'}->clone;
-}
-
-=head1 BUGS
-
-As any software, it has bugs, but I'm hunting them down.
-
-=head1 SUPPORT
-
-Check the source code or contact author for support.
+=for Pod::Coverage BUILD
 
 =head1 AUTHOR
 
-Viorel Stirbu
-CPAN ID: VIORELS
-http://stirbu.name
+Charles A. Wimmer <charles@wimmer.net>
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
-This program is free software; you can redistribute
-it and/or modify it under the same terms as Perl itself.
+This software is Copyright (c) 2012 by Charles A. Wimmer.
 
-The full text of the license can be found in the
-LICENSE file included with this module.
+This is free software, licensed under:
 
-=head1 SEE ALSO
-
-http://developer.yahoo.com/yql
-http://developer.yahoo.com/yql/console
+  The (three-clause) BSD License
 
 =cut
-
-1;
-# The preceding line will help the module return a true value
 

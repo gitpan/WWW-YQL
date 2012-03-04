@@ -1,10 +1,17 @@
-MANIFEST
-README
-LICENSE
-Todo
 Changes
+LICENSE
+MANIFEST
+META.yml
 Makefile.PL
+README
+dist.ini
 lib/WWW/YQL.pm
+t/00-compile.t
+t/000_list_tables.t
 t/001_load.t
-t/002_live.t
-META.yml                                 Module meta-data (added by MakeMaker)
+t/002_empty_query.t
+t/003_bad_query.t
+t/004_insert_query.t
+t/author-critic.t
+t/release-pod-coverage.t
+t/release-pod-syntax.t

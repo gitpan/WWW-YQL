@@ -1,12 +1,16 @@
-# -*- perl -*-
+ # -*- perl -*-
 
-# t/001_load.t - check module loading and create testing directory
+use strict;
+use warnings;
+use Test::More;
 
-use Test::More tests => 2;
+BEGIN { use_ok('WWW::YQL') };
 
-BEGIN { use_ok( 'WWW::YQL' ); }
+can_ok('WWW::YQL', ('new'));
 
-my $object = WWW::YQL->new ();
-isa_ok ($object, 'WWW::YQL');
+use WWW::YQL;
+my $yql=new WWW::YQL();
+    
+isa_ok($yql, 'WWW::YQL');
 
-
+done_testing();
